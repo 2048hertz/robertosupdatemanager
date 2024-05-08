@@ -1,9 +1,5 @@
 #!/bin/bash
 
-# GitHub repository URLs
-MAJOR_UPDATE_REPO_URL="https://github.com/2048hertz/RobertOS"
-MINOR_UPDATE_REPO_URL="https://github.com/2048hertz/robertos-minor-update-repo"
-
 # Function to display the update manager UI
 display_update_manager_ui() {
     clear
@@ -75,11 +71,35 @@ is_newer_version() {
     fi
 }
 
-# Function to display the update manager UI and initiate update check
+# Function to create the .desktop file
+create_desktop_entry() {
+    cat > RobertOS-Update-Manager.desktop <<EOF
+[Desktop Entry]
+Type=Application
+Name=RobertOS Update Manager
+Exec=$(realpath $0)
+Icon=/usr/bin/RobertOS-assets/logofull.png
+Terminal=false
+Categories=Utility;
+EOF
+
+    sudo mv RobertOS-Update-Manager.desktop /usr/share/applications
+}
+
+# GitHub repository URLs
+MAJOR_UPDATE_REPO_URL="https://github.com/2048hertz/RobertOS"
+MINOR_UPDATE_REPO_URL="https://github.com/2048hertz/robertos-minor-update-repo"
+
+# Directory to store downloaded updates
+UPDATE_DIR="updates"
+
+# Main function
 main() {
-    while true; do
-        display_update_manager_ui
-    done
+    # Create .desktop file
+    create_desktop_entry
+
+    # Display update manager UI
+    display_update_manager_ui
 }
 
 # Call the main function
