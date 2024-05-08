@@ -4,17 +4,33 @@
 MAJOR_UPDATE_REPO_URL="https://github.com/2048hertz/RobertOS"
 MINOR_UPDATE_REPO_URL="https://github.com/2048hertz/robertos-minor-update-repo"
 
-# Directory to store downloaded updates
-UPDATE_DIR="updates"
+# Function to display the update manager UI
+display_update_manager_ui() {
+    clear
+    echo "======================================="
+    echo "        RobertOS Update Manager        "
+    echo "======================================="
+    echo ""
+    echo "1. Check for Updates"
+    echo "2. Exit"
+    echo ""
+    read -p "Enter your choice: " choice
+    case $choice in
+        1) check_for_updates ;;
+        2) exit ;;
+        *) echo "Invalid choice. Please try again." ;;
+    esac
+}
 
 # Function to check for updates
 check_for_updates() {
+    echo "Checking for updates..."
     # Check for major version updates
     major_update_version=$(get_latest_release_version "$MAJOR_UPDATE_REPO_URL")
     if [ ! -z "$major_update_version" ]; then
         echo "Latest major update version: $major_update_version"
         if is_newer_version "$major_update_version"; then
-            download_update "$major_update_version"
+            echo "Major update available. Please update your system."
             return
         fi
     fi
@@ -24,7 +40,7 @@ check_for_updates() {
     if [ ! -z "$minor_update_version" ]; then
         echo "Latest minor update version: $minor_update_version"
         if is_newer_version "$minor_update_version"; then
-            download_update "$minor_update_version"
+            echo "Minor update available. Please update your system."
             return
         fi
     fi
@@ -59,30 +75,12 @@ is_newer_version() {
     fi
 }
 
-# Function to download and install an update
-download_update() {
-    version="$1"
-    # Create the updates directory if it doesn't exist
-    if [ ! -d "$UPDATE_DIR" ]; then
-        mkdir -p "$UPDATE_DIR"
-    fi
-    # Construct URL to the update file
-    update_url="${MAJOR_UPDATE_REPO_URL}"
-    if [[ "$version" == *"-"* ]]; then
-        update_url="${MINOR_UPDATE_REPO_URL}"
-    fi
-    update_url="$update_url/releases/download/$version/updater.sh"
-    # Download the update file
-    update_file="$UPDATE_DIR/update_$version.sh"
-    curl -s -L -o "$update_file" "$update_url"
-    if [ $? -eq 0 ]; then
-        echo "Update downloaded successfully."
-        # Run the update script
-        bash "$update_file"
-    else
-        echo "Failed to download the update."
-    fi
+# Function to display the update manager UI and initiate update check
+main() {
+    while true; do
+        display_update_manager_ui
+    done
 }
 
-# Main function
-check_for_updates
+# Call the main function
+main
