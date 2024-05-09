@@ -11,7 +11,8 @@ display_update_manager_ui() {
     echo "2. Exit"
     echo ""
     read -p "Enter your choice: " choice
-    case $choice in
+    echo "DEBUG: Choice entered is $choice" # Debugging statement
+    case "$choice" in
         1) check_for_updates ;;
         2) exit ;;
         *) echo "Invalid choice. Please try again." ;;
@@ -77,7 +78,7 @@ create_desktop_entry() {
 [Desktop Entry]
 Type=Application
 Name=RobertOS Update Manager
-Exec=$(realpath $0)
+Exec=$(realpath "$0")
 Icon=/usr/bin/RobertOS-assets/logofull.png
 Terminal=false
 Categories=Utility;
@@ -104,3 +105,4 @@ main() {
 
 # Call the main function
 main
+
