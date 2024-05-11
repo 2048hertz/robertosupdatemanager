@@ -1,5 +1,12 @@
 #!/bin/bash
 
+# Current version
+CURRENT_VERSION="0.1"
+
+# GitHub repository URLs
+MAJOR_UPDATE_REPO_URL="https://github.com/2048hertz/RobertOS"
+MINOR_UPDATE_REPO_URL="https://github.com/2048hertz/robertos-minor-update-repo"
+
 # Function to display the update manager UI
 display_update_manager_ui() {
     clear
@@ -11,7 +18,6 @@ display_update_manager_ui() {
     echo "2. Exit"
     echo ""
     read -p "Enter your choice: " choice
-    echo "DEBUG: Choice entered is $choice" # Debugging statement
     case "$choice" in
         1) check_for_updates ;;
         2) exit ;;
@@ -22,87 +28,57 @@ display_update_manager_ui() {
 # Function to check for updates
 check_for_updates() {
     echo "Checking for updates..."
-    # Check for major version updates
-    major_update_version=$(get_latest_release_version "$MAJOR_UPDATE_REPO_URL")
-    if [ ! -z "$major_update_version" ]; then
-        echo "Latest major update version: $major_update_version"
-        if is_newer_version "$major_update_version"; then
-            echo "Major update available. Please update your system."
-            return
-        fi
+    if check_for_update "$MAJOR_UPDATE_REPO_URL" "major"; then
+        return
     fi
-
-    # Check for minor version updates or patches
-    minor_update_version=$(get_latest_release_version "$MINOR_UPDATE_REPO_URL")
-    if [ ! -z "$minor_update_version" ]; then
-        echo "Latest minor update version: $minor_update_version"
-        if is_newer_version "$minor_update_version"; then
-            echo "Minor update available. Please update your system."
-            return
-        fi
+    if check_for_update "$MINOR_UPDATE_REPO_URL" "minor"; then
+        return
     fi
-
     echo "No updates available."
 }
 
 # Function to get the latest release version from a repository URL
 get_latest_release_version() {
     repo_url="$1"
-    # Construct URL to latest release
-    releases_url="$repo_url/releases/latest"
-    # Send a GET request to GitHub API to get the latest release info
-    response=$(curl -s -o /dev/null -w "%{http_code}" "$releases_url")
-    if [ "$response" -eq 200 ]; then
-        latest_version=$(curl -s "$releases_url" | grep -o '"tag_name":.*' | sed -E 's/.*"([^"]+)".*/\1/')
-        echo "$latest_version"
-    else
-        echo "Failed to check for updates in $repo_url."
-    fi
+    curl -sSL "$repo_url/releases/latest" | grep -o '"tag_name":.*' | sed -E 's/.*"([^"]+)".*/\1/'
 }
 
 # Function to compare version numbers and check if a newer version exists
 is_newer_version() {
-    new_version="$1"
-    current_version="0.1"  # Placeholder for current version
-    # Compare major and minor versions
-    if [ "$new_version" \> "$current_version" ]; then
+    [ "$(printf '%s\n' "$1" "$2" | sort -V | head -n 1)" != "$1" ]
+}
+
+# Function to check for updates in a repository
+check_for_update() {
+    local repo_url="$1"
+    local update_type="$2"
+    local latest_version="$(get_latest_release_version "$repo_url")"
+    if [ -n "$latest_version" ] && is_newer_version "$latest_version" "$CURRENT_VERSION"; then
+        echo "Latest $update_type update version: $latest_version"
+        echo "$update_type update available. Downloading..."
+        download_and_execute_update "$repo_url" "$latest_version"
         return 0
-    else
-        return 1
     fi
+    return 1
 }
 
-# Function to create the .desktop file
-create_desktop_entry() {
-    cat > RobertOS-Update-Manager.desktop <<EOF
-[Desktop Entry]
-Type=Application
-Name=RobertOS Update Manager
-Exec=$(realpath "$0")
-Icon=/usr/bin/RobertOS-assets/logofull.png
-Terminal=false
-Categories=Utility;
-EOF
-
-    sudo mv RobertOS-Update-Manager.desktop /usr/share/applications
+# Function to download and execute the update
+download_and_execute_update() {
+    local repo_url="$1"
+    local version="$2"
+    local download_url="$repo_url/releases/download/$version/update.sh"
+    local temp_dir=$(mktemp -d)
+    local download_file="$temp_dir/update.sh"
+    curl -sSL -o "$download_file" "$download_url"
+    chmod +x "$download_file"
+    echo "Update downloaded. Executing..."
+    "$download_file"
 }
-
-# GitHub repository URLs
-MAJOR_UPDATE_REPO_URL="https://github.com/2048hertz/RobertOS"
-MINOR_UPDATE_REPO_URL="https://github.com/2048hertz/robertos-minor-update-repo"
-
-# Directory to store downloaded updates
-UPDATE_DIR="updates"
 
 # Main function
 main() {
-    # Create .desktop file
-    create_desktop_entry
-
-    # Display update manager UI
     display_update_manager_ui
 }
 
 # Call the main function
 main
-
