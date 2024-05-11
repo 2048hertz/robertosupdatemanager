@@ -81,9 +81,10 @@ create_desktop_entry() {
 [Desktop Entry]
 Type=Application
 Name=RobertOS Update Manager
+Comment=The official RobertOS update manager
 Exec=bash "/usr/bin/RobertOS-assets/rum.sh"
 Icon=/usr/bin/RobertOS-assets/logofull.png
-Terminal=false
+Terminal=true
 Categories=Utility;
 EOF
 
@@ -93,6 +94,7 @@ EOF
 # Main function
 main() {
     display_update_manager_ui
+    sleep 5
     create_desktop_entry
 }
 
