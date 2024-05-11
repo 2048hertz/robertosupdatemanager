@@ -75,9 +75,25 @@ download_and_execute_update() {
     "$download_file"
 }
 
+# Function to create the .desktop file
+create_desktop_entry() {
+    cat > RobertOS-Update-Manager.desktop <<EOF
+[Desktop Entry]
+Type=Application
+Name=RobertOS Update Manager
+Exec=bash "/usr/bin/RobertOS-assets/rum.sh"
+Icon=/usr/bin/RobertOS-assets/logofull.png
+Terminal=false
+Categories=Utility;
+EOF
+
+    sudo mv RobertOS-Update-Manager.desktop /usr/share/applications
+}
+
 # Main function
 main() {
     display_update_manager_ui
+    create_desktop_entry
 }
 
 # Call the main function
